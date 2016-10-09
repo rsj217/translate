@@ -40,11 +40,11 @@ Windows8中设置环境变量，只需要在**桌面**左下角右键，选择**
 
 Windows7, Windows Vista, 右键桌面**计算机**图标或者开始菜单。选择**属性**然后选择**高级系统设置**，然后是**高级**选项卡，最后是**环境变量**按钮。
 
-![windows环境变量菜单](/Users/ghost/Documents/translate/level up your web apps with go/images/1.1.png)
+![windows环境变量菜单](./images/1.1.png)
 
 一旦打开了环境变量设置窗口，选择在**系统变量**中选择**新建**，然后创建一个新的变量命名为`GOPATH`，变量的值为你的go代码工作区的路径，如下图，我设置`C:\Gocode`为`GOPATH`。
 
-![创建新的环境变量](/Users/ghost/Documents/translate/level up your web apps with go/images/1.2.png)
+![创建新的环境变量](./images/1.2.png)
 
 ### 第一份Go代码
 
