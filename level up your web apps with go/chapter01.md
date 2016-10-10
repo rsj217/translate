@@ -310,6 +310,27 @@ func giveMePear(fruit *string) {    *fruit = "pear"}func main() {    fruit :
 
 ## 结构（Struct）
 
+Go允许自定义类型，所有自定义类型都是结构。结构是包含命名字段的类型。继续前面的电影例子，我们可以创建一个Movie类型，它里面有一些数据：
+
+
+```
+type Movie struct {    Actors      []string    Rating      float32    ReleaseYear int    Title       string}
+```
+
+如您所见，我们还创建了多种不同的类型数据字段，每一个字段都有着自己的类型。你还会注意到每一个字段名都是以大写字母开头。这个规则很重要，这预示着这些值可以被包外的代码所访问。这些字段是可以导出的，我们会在接下来的章节介绍可导出与不可导出的实际关系。你可以粗略的理解，是否可以导出的字段或者方法类似访问权限的`public`（公有）还是`private`（私有）。
+
+与切片和图实例的方式类似，创建`Movie`类型的实例只需要在花括号中写入初始值即可：
+
+```
+episodeIV := Movie{    Title:       "Star Wars: A New Hope",    Rating:      5.0,    ReleaseYear: 1977,}
+```
+
+我们有了一个`Movie`实例，赋值给了`episodeIV`变量。我们值提供了`Movie`四个字段中的三个字段初始值，因此第四个字段将会根据其类型自动初始化为其空值，即`nil`。
+
+对于已经实例化的变量， 可以通过`.`点操作符访问它的成员字段，即读取字段的值或给字段赋值：
+```
+episodeIV.Actors = []string{    "Mark Hamill",    "Harrison Ford",    "Carrie Fisher",}fmt.Println(episodeIV.Title, "has a rating of", episodeIV.Rating)
+```
 
 
 ### 方法（Method）
