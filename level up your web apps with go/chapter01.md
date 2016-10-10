@@ -66,7 +66,7 @@ package mainimport "fmt"func main() {    fmt.Println("Hello World")}
 go run helloworld.go
 ```
 
-运行成功就会在命令行打印输出`Hello World`。麻雀虽小，五脏俱全，这个简单的程序宝包含了go程序的基本结构。代码开头，我们声明了代码所属的包（package）名。包是我们组织代码的基础结构，`main`包则是特殊的包，它可以直接执行。如果想要写一个包在别的Go程序中使用，必须指定一个唯一的main package。后面的章节将会介绍如何写我们自己的包。
+运行成功就会在命令行打印输出`Hello World`。麻雀虽小，五脏俱全，这个简单的程序宝包含了go程序的基本结构。代码开头，我们声明了代码所属的包（package）名。包是我们组织代码的基础结构，`main`包则是特殊的包，它可以直接执行。如果想要写一个包在别的Go程序中使用，必须指定一个唯一的`main`包。后面的章节将会介绍如何写我们自己的包。
 
 开头的下一行，我们导入（import）了程序所使用的包。因为这是一个简单程序，我们只应引用了一个包：`fmt`。`fmt`包来自Go标准库，后者随着go语言安装的时候一起安装。它提供了基本的格式化输出打印操作。`fmt`是标准库的一部分，是一个基础的导入语句。随后，我们将会见识到go如何通过源码url导入第三方包的导入语句；例如：“import github.com/tools/godep”。
 
@@ -334,8 +334,47 @@ episodeIV.Actors = []string{    "Mark Hamill",    "Harrison Ford",    "Carrie
 
 
 ### 方法（Method）
+
+你可以给任何自定义的类型添加方法。这与定义函数一样简单，这个方法有一个接受者（reciver）。所谓接受者类型很像是函数中定义只有一个参数的形式，只不过这个声明在`func`关键字之后，函数名之前。例如给Movie类型定义一个方法DisplayTitile，该方法用于打印一些格式化电影的名字和发行年限，可以写成如下的形式：
+
+```
+func (movie Movie) DisplayTitle() string {    return fmt.Sprintf("%s (%d)", movie.Title, movie.ReleaseYear)}
+
+func main() {    episodeV := Movie{        Title:       "Star Wars: The Empire Strikes Back",        ReleaseYear: 1980,    }    fmt.Println(episodeV.DisplayTitle())    // 输出: “Star Wars: The Empire Strikes Back (1980)”}
+```
+如您所见，在函数名`DisplayTitle`之前，声明了一个接受者`(movie Movie)`。这里声明了一个`Movie`类型的变量`movie`，可以像函数的其他参数一样在函数体内使用。刚接触方法可能让你感到头疼，其实这并不是新概念，这很像其他面对对象语言里类的“this”或者“self”。
+
+> Go中使用面对对象
+> 
+> 接受者函数是Go里实现面对对象的基础。定义了接受函数方法的类型，如同面对对象里的**对象**。我必须指出，Go并没有提供很多传统面对对象编程的结构，例如**继承**，go就是这么设计的。Go提供了很多**方法**用于实现复杂的数据类型，诸如以后会学习的**内嵌类型**（embedded types）和**接口**（interface）
+
+
+接受者类型也可以是一个指针类型。如果接受者不是指针，方法内任对结构实例的修改都只存在方法函数中，方法外的代码将不受影响。一个直观的列子就是定义一个计算（counter）类型，提供`Increment`方法给类型的`count`字段加一。
+
+```
+type Counter struct {    Count int}
+func (c Counter) Increment() {    c.Count++}
+func (c *Counter) IncrementWithPointer() {    c.Count++}
+
+func main() {    counter := &Counter{}    fmt.Println(counter.Count) // 输出: 0    counter.Increment()    fmt.Println(counter.Count) // 输出: 0    counter.IncrementWithPointer()    fmt.Println(counter.Count) // 输出: 1}
+```
+
+如您所见，调用`Increment`方法的时候，接受者为Counter实例的拷贝，在`Increment`方法作用域外，字段`Count`并没有增加。一旦方法接受者是一个指针类型，修改同样的`IncrementWithPointer`方法内修改的`Counter`和方法外的是同一个实例对象。
+
+这很有趣，创建`Counter`实例的时候使用了取址符号`&`，因此我们可以同时调用不包含指针接受者的`Increment`，和包含指针接受者的`IncrementWithPointer`方法。如果创建实例使用表达式`counter := Counter{}`，那么将无法调用`IncrementWithPointer`方法。（译者注：Go1.6.3版本counter := Counter{}也可以调用这两个方法）
+
 ## 代码可导性
+
+当你写自己的包，结构的时候，你需要考虑什么样的方法，函数，常量将提供给包以外的作用域的代码访问。所谓**可导出**（exported）的值指的是在包以外的作用域也可以访问，顾名思义**不可导**（enexported）的值则相反。当你不确定一个变量是否需要导出给别的代码访问的时候，一个显而易见的规则就是都设置成不可导出，直到意识到外面的包需要使用的时候再重新修改名字。
+
+```
+// myUnexportedFunc 是小写字母开头，其作用域只在包内，无法导出func myUnexportedFunc() {}// MyExportedFunc 是大写字母开头的，对其他包也是可见的，即可以导出func MyExportedFunc() {}type MyExportedType struct{
+    ExportedField   string    unexportedField string}
+```
+
 ## 总结
+
+本章介绍了Go语法和类型的基础知识。下一章，我们将会学习创建自定义类型，如何使用接口连接不同类型的实现，以及Go如何处理第三方库。
 
 
 
