@@ -260,8 +260,17 @@ code, exists := colours["burgundy"]if exists {    fmt.Println("Burgundy's hex 
 
 ## 函数（Function）
 
+我们已经在本章的开篇的HelloWorld练习中见识了函数。现在更深一点点了解函数吧。
 
+函数使用关键字（keyword）`func`定义，它可以传递多个参数和返回多个值。每一个参数和返回的值都必须指定类型；如果参数列表都是同一种类型，只需要在最后的参数指定类型即可。下面有几个例子：
 
+```
+func noParamsNoReturn() {    fmt.Println("I’m not really doing much!")}func twoParamsOneReturn(myInt int, myString string) string {    return fmt.Sprintf("myInt: %d, myString: %s", myInt, myString)}func oneParamTwoReturns(myInt int) (string, int) {    return fmt.Sprintf("Int: %d", myInt), myInt + 1}func twoSameTypedParams(myString1, myString2 string) {    fmt.Println("String 1", myString1)    fmt.Println("String 2", myString2)}
+```
+
+上述的例子中，第一个函数没有参数和返回值；这是最简单的一类函数。`twoParamsOneReturn`函数有两个不同类型的参数，并返回一个`string`类型的值。`oneParamTwoReturns`函数有一个`int`类型的参数，同时返回了一个`string`类型和一个`int`类型的返回值。最后，`twoSameTypedParams`函数展示了两个相同类型的参数，只需要在最后一个参数指定类型即可。
+
+很多函数都会返回两个值，第一个是函数实际需要返回的值，第二个值则是表示函数执行式是否有错误发生。这种方式在GO的实践中非常普遍，稍后我们再展示如何处理返回的错误。尽管你可以两个以上的值，可是这样的做法不常见。
 
 
 ### 指针（Pointer）
