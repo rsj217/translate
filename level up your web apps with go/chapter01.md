@@ -80,9 +80,54 @@ go run helloworld.go
 > PATH 环境变量是系统寻找可行性文件的路径。当你在命令行输入某个命令的时候，系统会在PATH目录下寻找命令，并执行所找到的第一个命令，如果找不到就会报错。在windows中，你也可以设置PATH包含GOPATH。在MacOS 和Linxu中可以使用早先介方式添加： `export PATH=$PATH:$GOPATH/bin`追加到你的bash profile文件中。
 
 ## 基本类型（Types）
+Go是一门**强类型**语言。这意味着任何变量止只能存储单一类型的值，当然有时候你需要在不同类型之间进行转换。一旦变量声明后，该变量只能赋值所声明的类型。Go提供了丰富的基础类型，通过这些基础类型，你可以轻松的创建自定义类型来扩展基础类型。
+
+### 字串（String）
+
+**字串**是最普遍的基础类型之一。下面创建一个新的变量，并声明赋值为字串：
+
+```
+myString := "I'am a string."
+```
+
+注意，我们使用冒号（:）和等号（=）的方式，将一个字串赋值给变量**myString**。`:=`该符号可以声明并初始化一个新的变量。如果你想要修改已经声明初始化**myString**变量的值，重新赋值的时候需要删除冒号。如果仍然保留冒号，等于再次声明一个变量，将导致编译失败：
+
+```
+myString := "I’m a string."myString = "I’m really a string, I promise."
+```
+
+尝试重新声明初始化变量，编译代码的时候将会收到“`:=`左边没有性的变量”的错误提示。
+
+可以使用`+`符号连接字串。
+
+```
+myString := "I’m a string."myOtherString := myString + " I really am."fmt.Println(myOtherString) // 输出 "I’m a string. I really am."
+```
+
+> Go注释
+> Go支持单行和多行注释，`//`用于单行注释，多行注释的首尾巴使用`/*`和`*/`包裹
+
+### 数字（Number）
 
 
 
+#### 整型（Integer）
+#### 浮点型（Float）
+### 布尔（Boolean）
+
+### 数组（Aarry）和切片（Slice）
+#### 循环
+### 图（Map）
+#### 图的循环
+#### 图的处理
+
+## 函数（Function）
+### 指针（Pointer）
+
+## 结构（Struct）
+### 方法（Method）
+## 代码可导性
+## 总结
 
 
 
