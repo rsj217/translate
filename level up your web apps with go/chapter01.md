@@ -151,6 +151,48 @@ myBool := trueif myBool {    fmt.Println("myBool is true")} else {    fmt.Pr
 
 ### 数组（Aarry）和切片（Slice）
 
+**数组**是go中有趣的主题。通常你大部分时间都在处理**切片**，切片只是底层数组的一部分部分或者全部的引用，与大多数编程语言的数组类似。因为在你的日常编程中都是处理切片，我将会跳过一些关于数组的介绍。可是你要是想深入理解切片的数据模型，推荐阅读Go团队的文章[Go Slices: usage and internals](https://blog.golang.org/go-slices-usage-and-internals)。
+
+切片使用`[]T`的格式定义，T表示切片所存储的元素的类型。切片的元素必须是同一类型。下面创建一个切片，然后通过切片再创建新的切片：
+
+```
+mySlice := []int{1, 2, 3, 4, 5}mySlice2 := mySlice[0:3]mySlice3 := mySlice[1:4]fmt.Println(mySlice2, mySlice3, mySlice[2])// 输出: [1 2 3] [2 3 4] 3
+```
+
+首先，创建了一个包含5个整型元素的切片。花括号里写元素是Go实例化结构的方式，后面很多类似的容器类型都使用这种方式创建类型实例。
+
+
+创建了第一个切片之后，我们就能通过它创建其他的切片。方括号中的冒号前后的数字是对切片（slice）进行切片（slicing）的起始索引和终止索引。
+方括号中只有一个元素则是读取切片的一个元素的引用。使用超过切片长度的索引，程序运行的时候将会遇到索引越界的错误：“panic: runtime error: index out of range”。与多数编程语言类似，索引从0开始而不是1。> 运行时（Runing）错误和编译时（Compile）错误
+>
+> 编译器很聪明，它对我们的程序很了解，对于有问题的代码，它会拒绝编译。可是如果访问切片非法的索引，这是运行时错误。切片是动态改变大小的，因此go无法在编译的时候推断切片的大小。综上所述，使用切片索引的时候务必小心谨慎，记得检查切片长度。
+
+可以使用内建（built-in）的`len`函数获取切片的长度：
+
+```
+mySlice := []int{1, 2, 3, 4, 5}fmt.Println(len(mySlice)) // 输出: 5mySlice := []string{"Hi", "there"}fmt.Println(len(mySlice)) // 输出: 2
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
