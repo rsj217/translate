@@ -173,37 +173,97 @@ mySlice := []int{1, 2, 3, 4, 5}mySlice2 := mySlice[0:3]mySlice3 := mySlice[1:4
 mySlice := []int{1, 2, 3, 4, 5}fmt.Println(len(mySlice)) // 输出: 5mySlice := []string{"Hi", "there"}fmt.Println(len(mySlice)) // 输出: 2
 ```
 
+#### 循环（Loop）
 
+使用`for`语句配合`range`对切片进行迭代。
 
+```
+animals := []string{"Cat", "Dog", "Emu", "Warthog"}for i, animal := range animals {    fmt.Println(animal, "is at index", i)}
+```
 
+输出：
 
+```
+Cat is at index 0Dog is at index 1Emu is at index 2Warthog is at index 3
+```
 
+如果不想使用索引`i`的值，例如不对`i`赋值或者赋值了忽略不使用。我们会得到一个错误“i declared and not used”，`i`（变量声明了但是并没有使用）。若确定不在循环内使用变量索引，可以把索引赋值给一个下划线`_`符号，表示值被忽略。空下划线符号用于声明了但不使用的变量：
 
+```
+animals := []string{"Cat", "Dog", "Emu", "Warthog"}for _, animal := range animals {    fmt.Println(animal)}
+```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#### 循环
 ### 图（Map）
+
+Go提供了**图**结构用于存储键值对（key/value）数据。图和其他语言的哈稀表结构类似，或者是`Javascript`中的对象（object）。图的定义需要指定key和value的类型，像这样的结构`map[string]int`。例如，想要存储星球大战（Star Wars）电影发布的年数，可以创建如下图结构：
+
+```
+starWarsYears := map[string]int{
+	"A New Hope":              1977,
+	"The Empire Strikes Back": 1980,
+	"Return of the Jedi":      1983,
+	"Attack of the Clones":    2002,
+	"Revenge of the Sith":     2005,
+}
+```
+
+往图增加新的元素只需这样：
+
+```
+starWarsYears["The Force Awakens"] = 2015
+```
+
+注意，赋值并没有使用`:=`符号。
+
+与切片类似，使用`len`函数获取图的大小
+
+```
+fmt.Println(len(starWarsMovies)) // 输出: 6
+```
+
 #### 图的循环
+
+图的循环和切片的迭代类似。使用`for`语句配合`range`，不同在于，图的键取代了切片迭代的索引作为range返回的第一个值：
+
+```
+for title, year := range starWarsYears {	  fmt.Println(title, "was released in", year)}
+```
+
+运行上述代码，输出如下：
+
+```
+Revenge of the Sith was released in 2005The Force Awakens was released in 2015A New Hope was released in 1977
+The Empire Strikes Back was released in 1980Return of the Jedi was released in 1983Attack of the Clones was released in 2002
+```
+再一次运行代码，会发现输出的顺序与之前的不一样了。与数组和切片不一样，图的元素是没有先后顺序的，理解这个很重要。实际上，开发者必须明确了解，图使用随机顺序遍历图的元素。
+
 #### 图的处理
 
+使用图的方括号传入key的方式读取对应的value：
+
+```
+colours := map[string]string{    "red":    "#ff0000",    "green":  "#00ff00",    "blue":   "#0000ff",    "fuchsia": "#ff00ff",}redHexCode := colours["red"]
+```
+如果key `red`不存在，读取将会返回会是“空值”（empty value），这里变量`redHexCode`键对应的值将是空字串。
+
+使用内建函数`delete`删除图的键值对。
+```
+function: delete(colours, "fuchsia")
+```
+
+`delete`函数不会返回任何信息，即使传入的key不存在而删除失败也不会返回任何信息。想要知道图的key是否存在，读取的时候可以使用特殊的双返回值；第二个值是一个布尔值，表示key存在与否。
+
+```
+code, exists := colours["burgundy"]if exists {    fmt.Println("Burgundy's hex code is", code)
+} else {    fmt.Println("I don't know burgundy")}
+```
+
 ## 函数（Function）
+
+
+
+
+
 ### 指针（Pointer）
 
 ## 结构（Struct）
