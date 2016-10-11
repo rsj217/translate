@@ -38,14 +38,65 @@ const(    KB ByteSize = 1<<(10*(iota+1))    MB    GB    TB    PB)
 ```
 > 这里我们使用左移操作符`<<`创建常量的大小。理解这个运算符可能很棘手，其实很简单：将左边的数字乘以2的X次方，其中X是右边的数字。第一个表达式的值等于`<<`左边的`1`乘以2`的`10`次方（右边等于10*(0+1)）,即`KB`等于`1024`。第二个常量的值为 `1*2` 的20次方（`10 *(1+1)`），得到`1048576`。
 
-
-
-
-
-
-
-
 ## 接口（Interface）
+
+`Go`通过**接口**提供了强大的“数据类型共享”功能。接口是一种包含定义了函数签名集合的类型，任何其他类型，只要实现了接口定义的函数（类型方法与接口定义的函数签名一致）就等于实现了该接口。代码是最好的解释，请看下面的例子：
+
+```
+type Fruit interface {    String() string}type Apple struct {    Variety string}func (a Apple) String() string {    return fmt.Sprintf("A %s apple", a.Variety)}type Orange struct {    Size string}func (o Orange) String() string {    return fmt.Sprintf("A %s orange", o.Size)}func PrintFruit(fruit Fruit) {    fmt.Println("I have this fruit:", fruit.String())}func main() {    apple := Apple{"Golden Delicious"}    orange := Orange{"large"}    PrintFruit(apple)    PrintFruit(orange)}
+
+I have this fruit: A Golden Delicious appleI have this fruit: A large orange
+
+```
+
+代码定义了一个`Fruit`接口，`Fruit`只有一个`String() string`方法需要实现。这个方法没有参数，返回一个字串。因此任何类型只要实现一个`String`方法并返回一个字串，就等同于实现了`Fruit`接口。然后我们创建了两个结构`Apple`和`Orange`，它们有不同的字段，但是都正确的实现了`String`方法，因此它们都实现了`Fruit`接口。最后，定义一个函数`PrintFruit`，接受一个`Fruit`实例作为参数，函数内打印这个实例，即输出接口的`String`方法被调用返回的值。
+
+`main`函数中，分别实例化`Apple`类型和`Orange`，并把它们作为`PrintFruit`的参数传递。请注意，`apple`和`orange`都是它们各自的类型的实例，只有当成参数传递的时候，才是`Fruit`类型。
+
+接口的功能在于，调用代码不受底层类型或实现的影响，只要它匹配方法签名。这很强大，尤其是在写代码包进行复用的时候。
+
+让我们来看一个新的假设情况：假设您销售提供产品目录的Web应用程序。
+
+
+首先，您的客户只有几个产品要销售，所以您只需将信息存储在文件中，并在应用程序运行时加载它。 然后你有一个客户有大量的产品，所以是时候移动产品到某种数据库。 如果要使用相同的代码库来处理产品，但抽象出存储和检索产品的位置的详细信息，则可以为产品目录定义一个接口，然后对文件目录和数据库目录使用不同的实现。 我们将跳过实现，但是我们可以看看这个方法的一般结构。 首先，我们将创建一个接口来定义我们为产品目录处理的方法：
+
+```
+type ProductCatalogue interface {    All() ([]Product, error)    Find(string) (Product, error)}
+```
+
+这使我们能够处理获得所有的产品和获得一个特定的产品一个小的电子商务网站的一般要求。 可能需要更多的方法，但我会保持这个例子最小。 接下来，我们将定义文件存储和某些数据库存储的接口的实际实现：
+
+```
+type FileProductCatalogue struct {    ...  // 文件结构一些字段，比如文件位置之类的
+    }
+func (c FileProductCatalogue) All() ([]Product, error) {    ... // 实现All接口}
+
+func (c FileProductCatalogue) Find(id string) (Product, error) {    ... // 实现Find接口}
+type DBProductCatalogue struct {    ... // 数据库的一些字段，比如数据库连接}
+func (c DBProductCatalogue) All() ([]Product, error) {    ... // 实现All接口}
+func (c DBProductCatalogue) Find(id string) (Product, error) {    ... // 实现Find接口}
+
+```
+
+现在我们有实现了同一接口的不同实例。一个从文件加载，另一个从数据库加载。 当我们创建一个变量时，我们可以使用接口`ProductCatalogue`类型，而不是它们的具体实现：（译者注：变量可以是接口的类型，而不用专门指定是`FileProductCatalogue`类型还是`DBProductCatalogue`类型）
+
+
+```
+func main() {    var myCatalogue ProductCatalogue    myCatalogue = DBProductCatalogue{}    ...}
+```
+
+或者可以创建一个初始化函数，它接受任何`ProductCatalogue`接口的类型的实例：
+
+```
+func LoadProducts(catalogue ProductCatalogue) {    products, err := catalogue.All()    ...}
+```
+> 多接口（Multiple Interfaces）
+> 
+> 类型不限于实现单个接口。 例如，我们在第一个例子中看到的`Fruit`接口与`fmt`包中的`Stringer`接口完全相同。 如果你将一个`Fruit`实例传递给`fmt.Println`，你将看到`String`方法的结果。（Fruit接口声明了String方法， 实现了`Fruit`接口则有`String`方法）
+> `Go`语言中最基本的接口是**空接口**interface{}，它没有方法，因此每个类型都实现了它。 类型对实现接口方法的方法没有限制; 所有重要的是接口要求的方法存在于类型。
+> 类型对于所需要实现接口方法没有限制（类型可以实现多个接口的方法），重要的是类型必须实现接口所要求的方法。（一旦打算实现某个接口，就必须实现这个接口的所有方法）。
+
+
 ### 错误处理
 ## 内嵌类型
 ## defer指令
