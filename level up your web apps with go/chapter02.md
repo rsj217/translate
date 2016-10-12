@@ -129,9 +129,64 @@ type ErrInvalidStatusCode intfunc (code ErrInvalidStatusCode) Error() string {
 if myStatusCode != 200 {    return ErrInvalidStatusCode(myStatusCode)}
 ```
 
-
 ## 内嵌类型
+
+Struct types are allowed to have other types embedded in them. This allows for a level of object “inheritance”, although it’s not quite the same as classic object oriented inheritance. You embed a type by adding the type to a struct without a field name. The struct then gains access to the embedded value and its methods:
+
+**结构**类型允许嵌入其他类型。 这允许一个级别的对象“继承”，虽然它不像经典面向对象的继承。直接写内嵌类型而不写字段名是添加内嵌匿名类型，类型访问匿名类型的字段和方法与访问自身的一样：
+
+
+```
+type User struct {    Name string}
+
+func (u User) IsAdmin() bool { return false }func (u User) DisplayName() string {    return u.Name}
+type Admin struct {    User}
+func (a Admin) IsAdmin() bool { return true }func (a Admin) DisplayName() string {    return "[Admin] " + a.User.DisplayName()}
+func main() {    u := User{"Normal User"}    fmt.Println(u.Name)          // 正常 User    fmt.Println(u.DisplayName()) // 正常 User    fmt.Println(u.IsAdmin())     // false    a := Admin{User{"Admin User"}}    fmt.Println(a.Name)          // Admin User    fmt.Println(a.User.Name)     // Admin User    fmt.Println(a.DisplayName()) // [Admin] Admin User    fmt.Println(a.IsAdmin())     // true}
+```
+
+我们可以看到，`User`类型很简单，但是`Admin`类型有一个内嵌的`User`。 `Admin`类型的实例可以访问嵌入类型`User`的字段和方法，就像访问它们是自己的一样。当我们在开始时打`Name`和`User.Name`时，它们的输出是完全一样的。
+
+
+有趣的部分在于当覆盖内嵌类型的方法时。在`DisplayName`方法可以看到，在调用内嵌类型的同名方面之前，增加了一个当前类型的的前缀字符串`[Admin]`。
+
+内嵌类型在实现接口的时候很有用。如果一个类型的内嵌类型实现了某个接口，那么就等价于该接口也自动的实现了那个接口。这是因为嵌入类型的所有方法都可用于嵌入它的类型，并且方法这些方法恰恰接口定义的时候所需要实现的方法。
+
+> 内嵌类型与子类的区别 
+> 
+> 多数面向对象语言中的子类化意味着创建一个从另一个类继承的类，继承所有的方法和属性。主要区别是在这些情况下，父类和子类共享其属性和方法; 即访问从子到父或者父到子两种方式。 然而，在Go中，内嵌式类型没有意识到它嵌入的类型，所以前者不能访问后者的字段或方法（父不能访问子）。
+
 ## defer指令
+
+本章将会介绍最后一个语言特性**defer**指令。此命令可以让我们在当前函数返回后再运行一个函数。defer定义的所谓延迟函数，可以让我们确保，函数无论什么时候返回，都会执行这个延迟函数，这有利于将函数运行完毕的收尾功能代码集中组织。
+
+
+一个简明的例子就是在函数中关闭文件。使用`defer`定义一个函数用于关闭所打开的文件，此时不用担心因为别的原因过早的返回函数时主动去关闭文件。
+
+```
+
+func CopyFile(dstName, srcName string) error {    src, err := os.Open(srcName)    if err != nil {return err }    defer src.Close()    dst, err := os.Open(dstName)    if err != nil {return err }    defer dst.Close()    _, err := io.Copy(dst, src)return err }
+```
+
+在这个例子中，我们打开两个不同的文件，以便我们可以从一个复制到另一个。通过在打开`src`文件之后调用`defer src.Close()`，我们可以避免在函数结束之前，或者在打开`dst`文件时返回错误的时候提醒自己记住调用它。这减少了我们必须编写的代码量，并使代码更稳定。如果函数改变，比如需要添加一段代码逻辑并且会返回，此时则不需在新增的代码后面修改原有的关闭逻辑。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## 三方包
 ## 可选的语法规则和惯用风格
 ### 可选的语法规则
