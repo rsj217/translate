@@ -280,11 +280,52 @@ mySlice := []string{"one", "two"} // 好的风格mySlice := []string{    "one"
 ```
 
 ### 代码风格
+
+虽然不一定要遵循这些约定，但是这样做是有意义的，因为它们被标准库和大多数Go开发人员使用。这些约定中的一些是有争议的，如使用`tab`缩进的。除此之外，其他规则则相当平常，例如选择驼峰（camel-casing）是命名变量。
+
+下面介绍一些常见的约定，这并不详尽，但是我相信你会在日常编程中使用。
+
 #### 变量命名
+
+使用小写字母开头的驼峰式命名变量（译者注：Go的首字母大小写与访问私有性有关，建议使用驼峰式，而不是下划线的方式，下面的例子是以组为单位）：
+
+```
+// 好风格的一组
+myVar := "something" 
+variable := "something" 
+
+// 坏风格的一组MyVar := "something" my_var := "something" 
+```
+
+当使用单词缩写时，根据初始字符的情况，坚持一致的情况：
+
+```
+// 好风格一组
+id := "123" myID := "123"
+
+// 坏风格的一组Id := "123" myId := "123" 
+```
+
 #### 常量（Constants）
+
+别的语言中常量通常是全是大写的字母，可是Go却不是这样的约定，Go依然使用与变量一致的驼峰式命名：
+
+```
+const retryTimeout = 60 // 好的风格const RETRY_TIMEOUT = 60 // 坏的风格const Retry_TIME_OUT = 60 // 糟糕的风格
+```
+
 #### 构造（Constructors）
+
+要注意的最后一个方面是初始化类型的新实例的方式。GO不像许多语言一样具有**构造函数**（constructor）的概念，惯用的做法是用`new`或`New`开始（取决于是否要导出）后跟类型的函数。这个函数通常会采用结构使用的时候所需要的字段为参数。例如，对于前文涉及的`Movie`类型，我们可能有一个`NewMovie(title string，year int) Movie`函数，因为我们只需要`title`和`year`字段。其他字段值可以以后再追加：
+
+```
+type Movie struct {    Actors      []string    Rating      float32    ReleaseYear int    Title       string}func NewMovie(title string, year int) Movie {    return Movie{        Title: title,        ReleaseYear: year,
+        Actors: []string{},    }}
+```
+
+注意我们如何为`Actor`字段创建一个空字符串数组？这些新函数提供了类型所需字段初始化空值的机会，并且通常的做法是在`new`函数中初始化空数组或图。
+
 ## 总结
 
-
-
+如果你已经做了这么远，你几乎涵盖了如何编写Go程序的整个基本原理！在下一章中，我们将看看一些Web开发相关代码。我们还将介绍如何处理HTTP请求和响应，如何处理模板，以及如何读写JSON。
 
