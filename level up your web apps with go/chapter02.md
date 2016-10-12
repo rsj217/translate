@@ -209,16 +209,75 @@ package mainimport (    "fmt"    "github.com/russross/blackfriday")func mai
 > 
 > 值得注意的是，`go get`命令不只是下载您指定的库，它还会下载您正在下载的库所依赖的其他的库。 因此，即使您只需要一个库，在`$GOPATH`中看到多个项目也是很常见的。你也可以使用这个优势：如果我们忘记运行`go get github.com/russross/blackfriday`，我们的代码将无法编译。但是我们可以在目录代码中直接运行`go get`而不带任何参数，Go会根据源码中import的关系自动下载所有的，Go会下载所有的依赖关系。 如果你想尝试这个，你可以删除`$GOPATH/src/github.com/russross/blackfriday`目录，并运行`go get`从上面的示例代码的目录。
 
+## 约定语法规则和惯用风格
 
+Go对于你应该如何编写代码是相当有见地的; 事实上，它有一些非常坚定的规则。一些格式化由编译器强制执行，而一些是约定。
 
+### 约定语法规则
 
+下面介绍一些语法风格，部分是日常编程所使用的或者别的库里所遇见的。
 
-
-## 可选的语法规则和惯用风格
-### 可选的语法规则
 #### 初始化匿名字段的结构
+
+实例化结构的时候可以不用指定字段的名字。只需要安装结构多定义的顺序书写即可，也可以不按照顺序，但是必须把字段名写全。否则，将会出现编译错误。使用这种方法，甚至可以把值都写在一行上：
+
+```
+type Human struct {		Name string		Age int 
+}
+// 正确的做法me := Human{"Mal Curtis", 29}
+
+// 错误，29多种的位置是string，int值将非法，同理”Mal Curtis“ 也不是intme = Human{29, "Mal Curtis"}
+// 错误，缺少指定的字段值，无法得知是第一个还是第二个参数
+me = Human{"Mal Curtis"}
+
+// 正确，指定了Name，Age则取零值
+me = Human{Name:"Mal Curtis"}
+// 错误，字段名没有写全me = Human{"Mal Curtis", Age: 29}
+
+```
+
+
 #### 变量初始化空值
+
+到目前为止，我们创建变量都是使用`:=`符号声明并初始化。实际上你也可以使用变量名跟岁类型关键字（变量名 类型）的语法进行声明变量，然后再使用所声明的类型值进行赋值：
+
+```
+var myString string // myString 变量的空值是空字串（`""`）myString = "Hello!" // 直接赋值，无需`:=`符号声明并赋值
+```
+
+使用上述的方式的时候，在声明变量的时候，变量将自动获得一个所属类型的**空值**（empty value）。例如，数字类型的空值是`0`，字串的空值是`""`空串，指针类型的空值是`nil`，切片和图的这些应用类型也是`nil`
+
+```
+var myMap map[string]string // myMap 的空值是 nilmyMap["Test"] = "Hi" // panic: 赋值错误，不能把给nil值的图添加键值对
+```
+
+你需要先初始化并赋值给变量，然后才能添加键值对：
+
+```
+myMap = map[string]string{}
+```
+
+
 #### 尾部的逗号
+
+关于替代语法的最后一点是，你可以经常把序列的元素使用逗号分隔为多行，但每行必须有一个尾随逗号。一些语言或语法不允许尾随逗号，这使得重新排列列表的顺序会很烦人（因为要经常删掉最后一项的尾逗号）。然而，Go不仅允许尾随逗号，还不可或缺，否则代码将无法编译。记住，这仅适用于在多行上书写时，单行的时候必须去掉尾逗号。我们在初始化结构和图时已经见识到了，切片等序列也同样适用：
+
+```
+mySlice := []string{"one", "two"} // 好的风格mySlice := []string{    "one",    "two",} // 另外一种写法
+mySlice := []string{"one", "two",} // 编译错误，必须去掉尾逗号
+myMap := map[string]string{"one": "1", "two": "2"} // 正确的做法myMap := map[string]string{    "one": "1",    "two": "2",} // 合法的写法myMap := map[string]string{    "one": "1",    "two": "2"} // 编译错误
+```
+
+这也适用于函数的定义和调用。 如果定义参数过多，可以在多行上列出参数和返回值。规则是按照惯例，每一行结束都需要一个逗号，除非没有下一行了：（译者注：多行的项中，最后一项的后面如果没有`)`圆括号或者`}`花括号，都需要尾逗号）
+
+```
+// 通常的函数func JoinTwoStrings(stringOne, stringTwo string) string {    return stringOne + stringTwo}
+
+// 参数分行，行结束的时候没有圆括号或花括号func JoinTwoStrings(stringOne,    stringTwo string,) string {    return stringOne + stringTwo}myString := JoinTwoStrings("Hello", "World")
+myString := JoinTwoStrings(	"Hello",	"World", 
+)
+
+```
 
 ### 代码风格
 #### 变量命名
