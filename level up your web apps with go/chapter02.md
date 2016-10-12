@@ -131,7 +131,6 @@ if myStatusCode != 200 {    return ErrInvalidStatusCode(myStatusCode)}
 
 ## 内嵌类型
 
-Struct types are allowed to have other types embedded in them. This allows for a level of object “inheritance”, although it’s not quite the same as classic object oriented inheritance. You embed a type by adding the type to a struct without a field name. The struct then gains access to the embedded value and its methods:
 
 **结构**类型允许嵌入其他类型。 这允许一个级别的对象“继承”，虽然它不像经典面向对象的继承。直接写内嵌类型而不写字段名是添加内嵌匿名类型，类型访问匿名类型的字段和方法与访问自身的一样：
 
@@ -170,24 +169,51 @@ func CopyFile(dstName, srcName string) error {    src, err := os.Open(srcName)
 
 在这个例子中，我们打开两个不同的文件，以便我们可以从一个复制到另一个。通过在打开`src`文件之后调用`defer src.Close()`，我们可以避免在函数结束之前，或者在打开`dst`文件时返回错误的时候提醒自己记住调用它。这减少了我们必须编写的代码量，并使代码更稳定。如果函数改变，比如需要添加一段代码逻辑并且会返回，此时则不需在新增的代码后面修改原有的关闭逻辑。
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## 三方包
+
+到目前为止，我们只在示例中使用了标准库; 它们作为Go安装的一部分代码。 然而，在现实生活中，您将同时使用标准库和第三方代码。Go的第三方生态系统使其运行起来非常容易，事实上只需要一个`go get`命令工具即可使用`Internet`上托管第三方软件包。下面将会介绍如何使用第三方包。在后面的章节中，还将研究如何创建和分发我们自己的包。
+
+> 源码管理软件
+> 
+> Go can download third-party libraries stored in several varieties of source control software. If you attempt to download a package stored in source control software not on your system, you’ll see a message along the lines of “go: missing Git com- mand. See http://golang.org/s/gogetcmd.” The vast majority of packages are stored in Git, so I suggest you install it if you're yet to do so. Visit http://golang.org/s/gogetcmd now and follow the link to install it. Go also supports Mercurial, Subversion, and Bazaar.
+
+Go可以下载几个源代码控制软件中托管的第三方库。如果您尝试下载存储在源代码控制软件而不是系统上的软件包，您将看到一条消息，显示`“go：missing Git command”`。 请参见[http://golang.org/s/gogetcmd](http://golang.org/s/gogetcmd)。“绝大多数软件包都存储在Git中，因此建议您安装它，如果你还没有这样做。立即访问[http://golang.org/s/gogetcmd](http://golang.org/s/gogetcmd)，并按照链接安装。`Go`也支持`Mercurial`，`Subversion`和`Bazaar`。
+
+
+为了实践三方包的使用，我们将会写一个简单的程序将`markdwon`文本转换成`HTML`文件。如果不熟悉`markdwon`也没关系。它只是写一个格式化文本的方式，由于不用使用`HTML`标记就能写出漂亮的标记文本而广受欢迎。
+
+我们将会使用**Russ Ross**所开发的库`Black Friday`。这个库托管在`Github`上`github.com/russross/blackfriday`。使用`go get`命令下载安装：
+
+```go get github.com/russross/blackfriday
+```
+
+该命令将会把`blackfriday`包安装在`$GOPATH`的源码文件夹下，即`$GOPATH/src/git- hub.com/russross/blackfriday`。命令执行一切正常将不会有任何输出。重复输入将会很快返回，因为go检查到了已经下载了文件。为了强制更新下载，需要给命令添加一个`-u`的参数标记。
+第三方安装的位置在 现在可以轻松的通过第三方的安装位置`github.com/russross/blackfriday`导入代码使用：
+
+```
+package mainimport (    "fmt"    "github.com/russross/blackfriday")func main() {    markdown := []byte(`# This is a header* and* this* is*a* list    `)    html := blackfriday.MarkdownBasic(markdown)    fmt.Println(string(html))}
+```
+
+运行上述代码，可以看到输出：
+
+```
+<h1>This is a header</h1><ul><li>and</li><li>this</li><li>is</li><li>a</li><li>list</li></ul>
+```
+
+这里有几点值得注意。首先是我们使用反引号（``` ` ```）创建一个跨越多行的字符串，我们还将它转换为一个字节数组，用圆括号括起来，前面加一个类型`[]byte('一些字串')` 。我们将在后面的章节讨论字节数组，但是暂时只是将它们看作是表示字符串的另一种方式。一旦我们准备好了`markdown`文本，可以创建一个新的变量html。这也是一个字节数组，所以当我们打印出来，我们首先将它转换回字串`string(html)`。
+
+你会注意到我们将库称为`blackfriday`，而不是完整路径。包名称不是由`URL`中定义的，而是由库的代码中的`packege xyz` 指令定义的; 一般惯例是路径的最后部分的名称和所导入的包的名称匹配。(即 `github.com/russross/xyz`和`package xyz`中的`xyz`一致，`xyz`是**文件夹名**，而不是**文件名**)。
+
+
+> Go 获取库
+> 
+> 值得注意的是，`go get`命令不只是下载您指定的库，它还会下载您正在下载的库所依赖的其他的库。 因此，即使您只需要一个库，在`$GOPATH`中看到多个项目也是很常见的。你也可以使用这个优势：如果我们忘记运行`go get github.com/russross/blackfriday`，我们的代码将无法编译。但是我们可以在目录代码中直接运行`go get`而不带任何参数，Go会根据源码中import的关系自动下载所有的，Go会下载所有的依赖关系。 如果你想尝试这个，你可以删除`$GOPATH/src/github.com/russross/blackfriday`目录，并运行`go get`从上面的示例代码的目录。
+
+
+
+
+
+
 ## 可选的语法规则和惯用风格
 ### 可选的语法规则
 #### 初始化匿名字段的结构
