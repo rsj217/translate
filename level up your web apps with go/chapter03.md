@@ -6,7 +6,7 @@
 
 Go创建web服务器相当简单。在多数其他语言，创建一个web服务器通常还需要一个额外的服务器软件，例如`PHP`需要`Apache`。Go的标准库提供了`http`包，我们无效依赖第三方包，仅使用`http`就能创建web服务。
 
-有多种方式创建GOhttp服务，最简单的方式就是指定一个`url`模式，并注册一个**处理函数**，这个函数的签名是`func(w http.ResponeWriter, r *http.Request)`。一旦url匹配了，就会调用注册的函数处理请求。接下来可以调用`http.ListenAndServer`启动服务监听：
+有多种方式创建GOhttp服务，最简单的方式就是指定一个`url`模式（一下简称模式或URL模式），并注册一个**处理函数**，这个函数的签名是`func(w http.ResponeWriter, r *http.Request)`。一旦url匹配了模式，就会调用注册的函数处理请求。接下来可以调用`http.ListenAndServer`启动服务监听：
 
 ```
 package main
@@ -69,23 +69,89 @@ HTTP/1.1 200 OKServer: Go ServerDate: Mon, 01 Jun 2015 09:12:32 GMTContent-Le
 
 ### 深入URL模式匹配
 
+因为所有的请求是 `http.ListenAndServe`所监听的端口接受处理。因此我们需要一种将不同资源的请求路由到我们代码的不同部分的方法。幸运的是Go提供了`http.ServeMux`结构原生支持这样的方式。`ServeMux`是一个请求多路复用器，它将请求的`URL`与模式中中`url`进行匹配，并执行最匹配模式的处理函数。
 
+`http`包提供了一个默认的`DefaultServeMux`实例，并且`http.HandleFunc`也是`DefaultServeMux`方法`(*ServeMux) HandleFunc`的包装。
 
+当你创建`ServeMux`的时候，你可以为不同的URL模式注册不同处理函数。模式（Pattern）不必完全匹配路径（Path）。 有两种类型的模式：路径（path）和子树（subtree）。路径的结尾没有斜杠`/`，匹配严格的路径。子树的结尾包含斜杠`/`，并且匹配所有以子树开头的url。因此，在下一个例子中，请求`/articles/latest`将会返回`“Hello from /articles/”`，因为url`/articles/latest`与模式中的`/articles/`子树匹配。可是访问`/users/latest`将会返回一个404错误，因为模式`/users`缺少尾部的`/`，需要完全匹配（译者注：下面注释部分为源代码，可是是有问题的用法，参考上下文和go源代码，正确的用法为非注释的地方）：
 
+```
+/*
+func main() {
 
+	mux := http.NewServeMux()
+	mux.HandleFunc("/articles/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Hello from /articles/")
+	})
+	mux.HandleFunc("/users", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Hello from /users")
+	})
+	http.ListenAndServe(":3000", mux)
+}
+*/
 
+func main() {
 
+	mux := http.NewServeMux()
+	mux.HandleFunc("/articles/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Hello from /articles/")
+	})
+	mux.HandleFunc("/users", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Hello from /users")
+	})
+	http.ListenAndServe(":3000", mux)
+}
 
+```
 
+模式的长度也很重要。模式越长的优先级越高。例如，模式`/articles/latest/`要比`/articles/`优先级高。因为有了顺序优先级，所以与添加路由的顺序没有区别。添加在`/articles/latest/`的路由规则在`/articles/`的处理程序之前，实际访问的时候也和预期绝对一致：
 
+```
+func main() {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/articles/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Hello from /articles/")
+	})
+	mux.HandleFunc("/articles/latest/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Hello from /articles/latest/")
+	})
+	mux.HandleFunc("/users", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Hello from /users")
+	})
+	http.ListenAndServe(":3000", mux)
+}
 
-
-
-
-
-
+```
+> 主机名匹配
+> 
+> 路由匹配的时候也可以从主机名开始，并且只有匹配的主机名才算真正的匹配。主机名匹配的模式拥有最高的优先级。
 
 ### 返回错误
+
+有时候事与愿违，程序并不会正常工作，此时就需要返回一个错误，至少需要返回与`200 ok`不一样的响应。Web开发中状态码至关重要；如果没有状态码，访问不存在的资源的时候，或者网页的移动了，又或者遇了问题的时候希望能够回退。
+
+常见的几个状态码：
+
+■ 301 Moved Permanently― 重定向页面■ 404 Not Found― 访问的资源不存在■ 500 Internal Server Error―服务器内部错误
+
+`http`包提供另一个`Error`函数用于返回错误，它需要两个参数，一个是`ResponseWriter`，另一个是整型的状态码。例如，500的错误返回如下：
+
+```
+http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {    http.Error(w, "Something has gone wrong", 500)})
+```
+
+每个状态代码都有语义，所以你应该努力使用最合适的。如果有疑问，请记住，你并不是第一个吃螃蟹的人，在你试图找到合适的状态码之前，可能有无数的人已经尝试做了。Google是你的好朋友。完整的状态代码的请查看维基百科文章：[List of HTTP status codes](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes)
+
+> 状态码常量
+> 
+> Go的http包提供了很多HTTP状态码的常量。你可以直接使用这些常量而不是自己声明整数的code。`http.StatusBadRequest`就比 400 更容易理解。
+> 
+> 几个常见的的`Helper函数`：
+> `http.NotFound` 可能是最普遍错误码是 `404 Not Found`。`http.NotFound`函数的参数为`ResponseWriter` 和`Request`类型的实例。（`http.NotFound(w, r)`）
+> 
+> `http.Redirect` 它的参数除了是`ResponseWriter`和`Request`的实例之外还有两个参数，一个是字串类型的参数，表示需要重定向的`url`；另外一个是整型的数字状态码。重定向的状态码有好几个。有多种类型的重定向状态代码。 最常见的是301用于永久移动的资源，302用于临时移动的资源。（` http.Redirect(w, r, "http://google.com", http.StatusMovedPermanently)`）
+
+
 ### Handler接口
 ### 中间件
 
