@@ -167,7 +167,7 @@ package mainimport (    "fmt""net/http""time" )type UptimeHandler struct {
    return UptimeHandler{ Started: time.Now() }}func (h UptimeHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {    fmt.Fprintf(        w,        fmt.Sprintf("Current Uptime: %s", time.Since(h.Started)),    )}func main() {    http.Handle("/", NewUptimeHandler())    http.ListenAndServe(":3000", nil)}
 ```
 
-使用浏览器访问`http://127.0.0.1:3000`，就能看见服务器返回的当前时间。`time.Since`函数返回一个`time.Duration`结构对象，表示自服务器启动以来所经过的时间。`time.Duration`类型被很好地转换为人类可读的字串; 例如，`"Current Uptime: 4m20.843867792s"`。
+使用浏览器访问`http://127.0.0.1:3000`，就能看见服务器返回的当前时间。`time.Since`函数返回一个`time.Duration`结构对象，表示自服务器启动以来所经过的时间。然后`time.Duration`类型被格式化为人类可读的字串; 例如，`"Current Uptime: 4m20.843867792s"`。
 
 ### 中间件
 
