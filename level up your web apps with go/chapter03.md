@@ -151,8 +151,24 @@ http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {    http.Err
 > 
 > `http.Redirect` 它的参数除了是`ResponseWriter`和`Request`的实例之外还有两个参数，一个是字串类型的参数，表示需要重定向的`url`；另外一个是整型的数字状态码。重定向的状态码有好几个。有多种类型的重定向状态代码。 最常见的是301用于永久移动的资源，302用于临时移动的资源。（` http.Redirect(w, r, "http://google.com", http.StatusMovedPermanently)`）
 
-
 ### Handler接口
+
+还有另一种方式注册函数来处理`HTTP`请求。任何实现接口`http.Handler`的类型都可以和模式字串一起传递到`http.Handle`函数。 正如我们之前使用`HandleFunc`函数看到的，这是使用默认ServeMux实例的快捷方式。
+
+`http.Handler`接口只有一个函数，这个函数的签名和`http.HandleFunc`函数一致。
+
+```
+type Handler interface {    ServeHTTP(ResponseWriter, *Request)}
+```
+我们可以给任何类型实现`ServeHTTP`方法。如果我们想创建一个handler函数用来处理返回服务器当前的时间的响应。例如定义一个类型`UptimeHandler`并实现`Handler`接口的`ServeHTTP`方法：
+
+```
+package mainimport (    "fmt""net/http""time" )type UptimeHandler struct {    Started time.Time}func NewUptimeHandler() UptimeHandler {
+   return UptimeHandler{ Started: time.Now() }}func (h UptimeHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {    fmt.Fprintf(        w,        fmt.Sprintf("Current Uptime: %s", time.Since(h.Started)),    )}func main() {    http.Handle("/", NewUptimeHandler())    http.ListenAndServe(":3000", nil)}
+```
+
+使用浏览器访问`http://127.0.0.1:3000`，就能看见服务器返回的当前时间。`time.Since`函数返回一个`time.Duration`结构对象，表示自服务器启动以来所经过的时间。`time.Duration`类型被很好地转换为人类可读的字串; 例如，`"Current Uptime: 4m20.843867792s"`。
+
 ### 中间件
 
 ## HTML 模板

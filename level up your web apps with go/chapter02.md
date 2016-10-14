@@ -6,7 +6,6 @@
 
 Go不能给内建的类型添加自定义方法，但是可以基于内建类型定义自己的类型。一个经典的例子就是定义一个`ByteSize`类型，它基于`float64`类型，提供了自定义的打印格式化方法，即根据结构大小的`bytes`显示不同的输出，例如_2KB_或者_3.14GB_：
 
-
 ```
 const (    KB = 1024    MB = KB * 1024    GB = MB * 1024    TB = GB * 1024    PB = TB * 1024)
 
@@ -20,7 +19,6 @@ type ByteSize float64func (b ByteSize) String() string {    switch {    case 
 用多个`if else`语句也可以实现`switch`语句的功能，但后者更简洁。
 
 `main`函数创建了一些`ByteSize`实例，并通过`fmt.Println`打印输出。你可能注意到我们并没有显示的调用`String`方法，原因是如果类型定义了`String`方法，`fmt`包会自动调用并输出结果。看起来有点像魔法，下一节再披露其中神秘之处。
-
 
 > 优雅的`Iota`
 > 
@@ -97,7 +95,6 @@ func LoadProducts(catalogue ProductCatalogue) {    products, err := catalogue.A
 > 类型对于所需要实现的接口方法没有限制（类型可以实现多个接口的方法），重要的是类型必须实现接口所要求的方法。（一旦打算实现某个接口，就必须实现这个接口的所有方法）。
 
 ### 错误处理
-
 
 Go中的错误处理是一种面对面的情况。许多语言会不强迫你考虑错误处理的情况下允许编程。让你可以捕获错误，但是如果你不想或者不理会，那么你的代码将遇到可笑的失败，并且很难跟踪。
 
@@ -235,7 +232,6 @@ me = Human{Name:"Mal Curtis"}
 // 错误，字段名没有写全me = Human{"Mal Curtis", Age: 29}
 
 ```
-
 
 #### 变量初始化空值
 
