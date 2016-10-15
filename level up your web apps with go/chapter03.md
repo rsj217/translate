@@ -197,9 +197,49 @@ curl -i 127.0.0.1:3000/?secret_token=MySecretHTTP/1.1 200 OKDate: Mon, 01 Jun 
 
 ## HTML 模板
 
+到目前为止，我们看过的例子是微不足道的，旨在检查一些特定的用例。如果我们想要开始返回更复杂的响应，该怎么办呢？入金仅仅使用`fmt`包来来生成`HTML`将会很棘手。
 
+幸运的是Go提供了原生的`HTML`模板处理包`html/template`。该包不仅能让我们轻而易举格式化来自Go数据的`HTML`页面，还能正确处理`escaping`转义字符的`HTML`输出。大多数情况下，都无需担心传入模板数据的escaping转义问题，Go将会帮你处理。
+
+> Escaping转义
+> 
+> Escaping input on an HTML page is extremely important for both layout and se- curity reasons. Escaping is the process of turning characters that have special meaning in HTML into HTML entities. For example, an ampersand is used to start an HTML entity, so if you wanted to display an ampersand correctly, you would have to write the HTML entity for one instead: &amp;. If you don’t escape any data you try to display in your templates, then at best you might allow people to accidentally break your page layout, and at worst you open up your pages to ma- licious attackers.
+> > If, for example, you have a blog featuring technical articles, you wouldn’t want a post that had the content </body> to create an end body tag. Instead, you’d want it to display as text, which means converting it to the HTML &lt;/body&gt;. If you had comments on your blog, you’d want to avoid users being able to create comments with <script> tags that run JavaScript on your users’ computers when they visit your page. This sort of security vulnerability is commonly referred to as cross-site scripting, or XSS. You can read much more on the topic at the Open Web Application Security Project (OWASP) website.3
+
+`html/template`包将分两步工作。首先需要需要将HTML字符模板解析成为`Template`类型。然后执行注入模板的数据结构来生成`HTML`字串。
+
+无论是从文件中载入还是直接在Go代码中定义，模板都是从纯文件字符串中创建。变量替换还是被称之为**action**控制结构，都是通过花括号`{{` 和 `}}`对包裹。任何它们之外的字符都不会被修改。
+
+一个简单的模板输出的例子看起来是这样的：
+
+```
+package mainimport (    "html/template""os" )func main() {    tmpl, err := template.New("Foo").Parse("<h1>Hello {{.}}</h1>\n")    if err != nil { panic(err) }    err = tmpl.Execute(os.Stdout, "World")    if err != nil { panic(err) }}
+```
+每一个模板都需要命名。原因稍后解释，目前都可以命名为“Foo”。
+
+如你所见，例子中的`{{.}}`称之为**点action**，它指的是传递到模板中的数据。因为我们只是传递一个字符串，所有我们需要做的是直接引用数据，但点可以赋值多次不同的数据; 例如，当循环数据时，`.`将分配当前迭代的值。我们将会看到在模板包中点将会被重复使用。
 
 ### 访问模板数据
+
+模板中访问更复杂的数据类型也相当简单。虽然在Go访问结构的字段，图的key或者简单的函数不一样，但是在模板中访问方式却很相似。如果我们在渲染模板的时候注入一个结构体，可以通过它们的字段名访问其可以导出的字段。下面例子将会打印输出：`“The Go html/template package” by Mal Curtis`：
+
+```
+type Article struct{    Name string    AuthorName string}func main(){    goArticle := Article{        Name: "The Go html/template package",        AuthorName: "Mal Curtis",    }tmpl, err := template.New("Foo").Parse("'{{.Name}}' by {{.AuthorName}}")    if err != nil { panic(err) }    err = tmpl.Execute(os.Stdout, goArticle)    if err != nil { panic(err) }}
+```
+上述规则同样适用与图，即通过图的key访问其值。与结构体不一样，key无需以大写字母开头：
+
+```
+func main(){    article := map[string]string{        "Name": "The Go html/template package",        "AuthorName": "Mal Curtis",    }	 tmpl, err := template.New("Foo").Parse("'{{.Name}}' by {{.AuthorName}}")    if err != nil { panic(err) }
+    err = tmpl.Execute(os.Stdout, article)    if err != nil { panic(err) }}
+```
+
+
+不带参数的函数或方法也可以以相同的方式调用（在Go文档中称为`niladic`函数）。 这个例子将输出`"Written by Mal Curtis"`：
+
+```
+type Article struct{    Name string    AuthorName string}func(a Article) Byline() string{    return fmt.Sprintf("Written by %s", a.AuthorName)}func main() {    goArticle := Article{        Name: "The Go html/template package",        AuthorName: "Mal Curtis",    }    tmpl, err := template.New("Foo").Parse("{{.Byline}}")    if err != nil { panic(err) }    err = tmpl.Execute(os.Stdout, goArticle)    if err != nil { panic(err) }}
+```
+
 ### 模板中的if else 条件判断
 ### 循环
 ### Multiple 模板
