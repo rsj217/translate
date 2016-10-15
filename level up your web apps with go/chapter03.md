@@ -171,6 +171,31 @@ package mainimport (    "fmt""net/http""time" )type UptimeHandler struct {
 
 ### 中间件
 
+在Web开发中，**中间件**（Middleware）是指一系列处理程序，它们围绕Web应用程序，添加额外的功能。这是一个常见的概念，虽然经常被忽略，可是一旦正确的使用就非常强大。中间件可用于验证用户，压缩响应内容，限制请求速率，捕获应用程序异常等等。
+
+使用`http.Handlers`创建中间件很普通，也很容易。例如，我们可以创建一个中间件，他的功能就是检查请求中查询字串的`token`是否合法，否则则返回一个`404 Not Found`的响应错误。
+
+```
+// SecretTokenHandler 检查 secret tokentype SecretTokenHandler struct {    next http.Handler    secret string}
+
+// SecretTokenHandler 实现了 http.Handler 接口的 ServeHTTP方法.func (h SecretTokenHandler) ServeHTTP(w ResponseWriter, req *Request) {
+    // 检查 查询字串的 token    if req.URL.Query().Get("secret_token") == h.secret {
+        // 检查token合法，调用下一个handler函数        h.next.ServeHTTP(w, req)    }else{        // No match, return a 404 Not Found response        http.NotFound(w, req)    }}func main() {    http.Handle("/", SecretTokenHandler{        next: NewUptimeHandler(),        secret: "MySecret",    })    http.ListenAndServe(":3000", nil)}
+
+```
+不添加任何`token`的查询字符访问，将会返回 404 错误：```
+curl -i 127.0.0.1:3000
+ 
+HTTP/1.1 404 Not FoundContent-Type: text/plain; charset=utf-8Date: Mon, 01 Jun 2015 02:07:59 GMTContent-Length: 19404 page not found
+```
+
+如果添加了token，将会返回下一个处理函数的处理响应结果：
+
+```
+curl -i 127.0.0.1:3000/?secret_token=MySecretHTTP/1.1 200 OKDate: Mon, 01 Jun 2015 02:09:49 GMTContent-Length: 31Content-Type: text/plain; charset=utf-8Current Uptime: 2m16.570254662s
+```
+
+
 ## HTML 模板
 ### 访问模板数据
 ### 模板中的if else 条件判断
