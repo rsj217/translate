@@ -241,8 +241,37 @@ type Article struct{    Name string    AuthorName string}func(a Article) Byl
 ```
 
 ### 模板中的if else 条件判断
+
+现在我们介绍了如何访问模板中不同类型数据结构，接下来看看是如何通过条件和循环结构控制模板中的执行流程。
+
+就像Go代码一样，模板通过`if`和`else`语句控制模板的条件流程。这没有什么难度，它将为模板提供大量的限制逻辑的部分。
+
+
+就像在Go代码中一样，我们可以通过使用If和Else语句来访问条件流。 这里没有太多的困难 - 它将弥补模板有限的逻辑的大部分。 因为我们不能使用括号来指定属于`if`语句的内容，所以我们使用`end`语句来表示结束边界。 如果文章尚未发布，此示例会将`"Draft"`一词附加到标题中：
+
+```
+type Article struct{    Name string    AuthorName string
+    Draft bool 
+}func main(){    goArticle := Article{        Name: "The Go html/template package",        AuthorName: "Mal Curtis",    }    tmpl, err := template.New("Foo").Parse(        "{{.Name}}{{if .Draft}} (Draft){{end}}”,    )    if err != nil { panic(err) }    err = tmpl.Execute(os.Stdout, goArticle)    if err != nil { panic(err) }}
+
+```
+你也可以在模板中使用可选的`{{ else }}`语句来执行条件不满足的情况，`{{if .Draft}} (Draft){{else}} (Published){{end}}`。
+
 ### 循环
+
+ 可以使用`range`来迭代切片或者图。range也可以提供一个可选的`{{ else }}`语句，当循环结束的时候，没有可以循环的项的时候使用else语句对列出一些消息佷有用。。
+
+在每个循环中，`.`被设置为循环变量的值。如果你在一个循环中调用点动作`{{.}}`，它将在循环的每次迭代中设置为不同的值。在这个例子中，我们将获得`Article`的`Name`和`AuthorName`的列表，或者一条消息`"No published articles yet"`：
+
+```
+func main(){    tmpl, err := template.New("Foo").Parse(`    {{range .}}        <p>{{.Name}} by {{.AuthorName}}</p>    {{else}}        <p>No published articles yet</p>    {{end}}`)
+
+    if err != nil { panic(err) }    err = tmpl.Execute(os.Stdout, []Article{})    if err != nil { panic(err) }}
+
+```
 ### Multiple 模板
+
+
 ### 管道过滤器（Piplines）
 ### 模板变量
 
