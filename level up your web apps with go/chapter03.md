@@ -206,6 +206,9 @@ curl -i 127.0.0.1:3000/?secret_token=MySecretHTTP/1.1 200 OKDate: Mon, 01 Jun 
 > Escaping input on an HTML page is extremely important for both layout and se- curity reasons. Escaping is the process of turning characters that have special meaning in HTML into HTML entities. For example, an ampersand is used to start an HTML entity, so if you wanted to display an ampersand correctly, you would have to write the HTML entity for one instead: &amp;. If you don’t escape any data you try to display in your templates, then at best you might allow people to accidentally break your page layout, and at worst you open up your pages to ma- licious attackers.
 > > If, for example, you have a blog featuring technical articles, you wouldn’t want a post that had the content </body> to create an end body tag. Instead, you’d want it to display as text, which means converting it to the HTML &lt;/body&gt;. If you had comments on your blog, you’d want to avoid users being able to create comments with <script> tags that run JavaScript on your users’ computers when they visit your page. This sort of security vulnerability is commonly referred to as cross-site scripting, or XSS. You can read much more on the topic at the Open Web Application Security Project (OWASP) website.3
 
+
+
+
 `html/template`包将分两步工作。首先需要需要将HTML字符模板解析成为`Template`类型。然后执行注入模板的数据结构来生成`HTML`字串。
 
 无论是从文件中载入还是直接在Go代码中定义，模板都是从纯文件字符串中创建。变量替换还是被称之为**action**控制结构，都是通过花括号`{{` 和 `}}`对包裹。任何它们之外的字符都不会被修改。
@@ -269,6 +272,7 @@ func main(){    tmpl, err := template.New("Foo").Parse(`    {{range .}}      
     if err != nil { panic(err) }    err = tmpl.Execute(os.Stdout, []Article{})    if err != nil { panic(err) }}
 
 ```
+
 ### Multiple 模板
 
 当解析模板的时候，实际上可以同时定义多个模板。这样就在运行代码的时候，也可以选择使用哪一个模板，或者在一个模板中调用另外一个模板。这给模板提供了强大的功能，鼓励模板代码的重用---普遍的做法是创建多个模板块。
@@ -276,7 +280,6 @@ func main(){    tmpl, err := template.New("Foo").Parse(`    {{range .}}      
 > 添加模板
 > 
 > 你不必在一次`Parse`调用的时候添加多个模板，而是可以多次调用`Parse`，或者使用`ParseFile`和`ParseGlob`方面从文件中载入模板。后续的章节将会介绍`Glob`模块。
-
 
 
 
