@@ -201,6 +201,12 @@ curl -i 127.0.0.1:3000/?secret_token=MySecretHTTP/1.1 200 OKDate: Mon, 01 Jun 
 
 幸运的是Go提供了原生的`HTML`模板处理包`html/template`。该包不仅能让我们轻而易举格式化来自Go数据的`HTML`页面，还能正确处理`escaping`转义字符的`HTML`输出。大多数情况下，都无需担心传入模板数据的escaping转义问题，Go将会帮你处理。
 
+> Escaping转义
+> 
+> Escaping input on an HTML page is extremely important for both layout and se- curity reasons. Escaping is the process of turning characters that have special meaning in HTML into HTML entities. For example, an ampersand is used to start an HTML entity, so if you wanted to display an ampersand correctly, you would have to write the HTML entity for one instead: &amp;. If you don’t escape any data you try to display in your templates, then at best you might allow people to accidentally break your page layout, and at worst you open up your pages to ma- licious attackers.
+> > If, for example, you have a blog featuring technical articles, you wouldn’t want a post that had the content </body> to create an end body tag. Instead, you’d want it to display as text, which means converting it to the HTML &lt;/body&gt;. If you had comments on your blog, you’d want to avoid users being able to create comments with <script> tags that run JavaScript on your users’ computers when they visit your page. This sort of security vulnerability is commonly referred to as cross-site scripting, or XSS. You can read much more on the topic at the Open Web Application Security Project (OWASP) website.3
+
+
 
 
 `html/template`包将分两步工作。首先需要需要将HTML字符模板解析成为`Template`类型。然后执行注入模板的数据结构来生成`HTML`字串。
