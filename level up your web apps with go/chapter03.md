@@ -408,15 +408,51 @@ func main(){
 
 这就是Go中编码复杂JSON的介绍。
 
-
-
-
-
-
-
 ### 反序列化（Unmarshling）
+
+**反序列化**Unmarshling）是序列化的想法操作，即将JSON结构转换成GO类型的数据结构。Go中反序列化是先创建一个空的类型对象，然后尝试将JSON的字串映射到这个对象上。
+
+例如，我们将从一个文件中载入一些配置数据映射到一个特定的Cconfig结构体。Go将尽最大努力将数据转换为适当的格式。。我们可以将下面的代码保存在`config.json`文件中：
+
+```
+{    "SiteName": "My Cat Blog",    "SiteUrl": "www.mycatblog.com",    "Database": {        "Name": "cats",        "Host": "127.0.0.1",        "Port": 3306,        "Username": "user1",        "Password": "Password1"} }
+```
+
+我们可以创建一个用来匹配的数据结构，当调用`json.Unmashal`函数的时候反序列化数据。该函数有两个参数，一个JSON数据的字串byte数组，第二次则是用来匹配的数据结构的指针：
+
+```
+type Config struct {    Name     string `json:"SiteName"`    URL      string `json:"SiteUrl"`    Database struct {        Name     string        Host     string        Port     int        Username string        Password string} }conf := Config{}data, err := iouitil.ReadData("config.json")if err != nil { panic(err) }err = json.Unmarshal(data, &conf)if err != nil { panic(err) }fmt.Printf("Site: %s (%s)", conf.Name, conf.URL)db := conf.Database// Print out a database connection string.fmt.Printf(    "DB: mysql://%s:%s@%s:%d/%s",    db.Username,    db.Password,
+    db.Host,    db.Port,    db.Name,)
+```
+这个例子将会输出：
+
+```
+Site: My Cat Blog (www.mycatblog.com)DB: mysql://user1:Password1@127.0.0.1:3306/cats
+```
+
+注意数据库的端口是如何被赋值为int数据类型的。Go有几个int数据类型（int， int32和int64），它不会挑剔你尝试反序列化的JSON数字类型，只要是数字类型就好，例如整型或者浮点型。
+
+如果配巧JSON中还有额外的键并且不被Go结构所匹配，那么Go会静默忽略。
+
 ### 未知的JSON结构处理
+
+有时候你会遇到需要反序列化一些额外格式的JSON。此时，将会有点麻烦。
+首先建议尝试确保你的数格输入是已知格式。如果是未知的输入，使用空接口`interface{}`，这样任何输入都会被匹配。然后我而提编程了数据访问，如果你想使用该数据做有效的操作的时候，将不得不的强制转换该数据为更严格的类型。
+
+载入未知JSON数据的例子将会打印`"foo"`:
+
+```
+package mainfunc FooJSON(input string) {    data := map[string]interface{}{}    err := json.Unmarshal([]byte(input), &data)    if err != nil { panic(err) }    foo, _ := data["foo"]    switch foo.(type) {
+		 case float64:        fmt.Printf("Float %f\n", foo)    	 case string:        fmt.Printf("String %s\n", foo)       default:        fmt.Printf("Something else\n")	  } }func main() {    FooJSON(`{        "foo": 123    }`)    FooJSON(`{        "foo": "bar"    }`)    FooJSON(`{"foo": [] }`)}
+```
+将会输出： `Float 123.000000 String bar Someting selse`。
+
+
+注意输入带有整数的`JSON`的时候会以类型`float64`结束。 这是因为`JSON`不区分整数和浮点数，它只有类型`"number"`。 由于Go无法推断预期的数据类型，因此默认为`float64`。
+
 ## 总结
+
+
 
 
 
