@@ -351,6 +351,39 @@ data, _ := json.MarshalIndent(article, "", "  ")fmt.Println(string(data))
 
 ### 自定义JSON字段名
 
+如果你之前使用过JSON，那么肯定会看见很多key使用下划线命名，例如`author_name`代替`AuthorName`。当然这并不是强制性规定，不过遵守这些约定对数据的使用有利。幸运的，我们可以使用Go的语言特性**标签**（tag）轻松的修改`JSON`的字段字面量，同时不用修改Go的数据结构。
+
+tag写在结构体字段定义的后面。它们的语法格式 `逗号，分隔符，元数据`（"comma,separated,metadata"）。对于JSON而言，指定tag的一些数据信息，可以修改key的名，选择需要输出的字段，或者当字段是为空的时候是否输出：
+
+```
+type Product struct{
+    // 修改json显示的字段为 "name".
+    Name string `json:"name"`
+    // 修改json显示的字段为 "author_name"，但是指定`omitempty`的时候，字段值为空是不显示key
+    AuthorName string `json:"author_name,omitempty"`
+    // 字段将隐藏，不会在json中输出
+    CommissionPrice float64 `json:"-"`
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ### 内嵌类型
 ### 反序列化（Unmarshling）
