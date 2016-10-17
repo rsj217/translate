@@ -366,26 +366,54 @@ type Product struct{
 }
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ### 内嵌类型
+因为Go在编码JSON的时候会遍历结构体的所有项，因此很容易传教复杂的JSON结构。如果我们想返回一个文章元数据的集合对象，我们可以定义一个新的类型：
+
+```
+package main
+
+import (
+    "fmt"
+    "encoding/json"
+)
+
+
+type Article struct {
+Name string }
+type ArticleCollection struct {
+
+    Articles []Article `json:"articles"`
+    Total    int       `json:"total"`
+}
+
+func main(){
+    p1 := Article{ Name: "JSON in Go" }
+    p2 := Article{ Name: "Marshaling is easy" }
+    articles := []Article{p1, p2}
+    collection := ArticleCollection{
+        Articles: articles,
+        Total: len(articles),
+    }
+    data, err := json.MarshalIndent(collection, "", "  ")
+    if err != nil { panic(err) }
+    fmt.Println(string(data))
+}
+
+```
+输出：
+
+```
+{  "articles": [    {      "name": "JSON in Go"}, {      "name": "Marshaling is easy"    }],"total": 2 }
+```
+
+这就是Go中编码复杂JSON的介绍。
+
+
+
+
+
+
+
 ### 反序列化（Unmarshling）
 ### 未知的JSON结构处理
 ## 总结
