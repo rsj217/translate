@@ -452,7 +452,9 @@ package mainfunc FooJSON(input string) {    data := map[string]interface{}{} 
 
 ## 总结
 
+本章我们学习了如何使用Go创建web服务器，以及如何创建中间件函数。我们全面见识了`html/template`包如何组织我们的html模板以及该如何序列化和反序列化JSON数据。
 
+这就是关于`HTTP`章节的介绍。接下来我们将很快把学到的知识组合在一起，学以致用。
 
 
 
