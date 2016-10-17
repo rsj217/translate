@@ -197,7 +197,7 @@ curl -i 127.0.0.1:3000/?secret_token=MySecretHTTP/1.1 200 OKDate: Mon, 01 Jun 
 
 ## HTML 模板
 
-到目前为止，我们看过的例子是微不足道的，旨在检查一些特定的用例。如果我们想要开始返回更复杂的响应，该怎么办呢？入金仅仅使用`fmt`包来来生成`HTML`将会很棘手。
+到目前为止，我们看过的例子是微不足道的，旨在检查一些特定的用例。如果我们想要开始返回更复杂的响应，该怎么办呢？如今仅仅使用`fmt`包来来生成`HTML`将会很棘手。
 
 幸运的是Go提供了原生的`HTML`模板处理包`html/template`。该包不仅能让我们轻而易举格式化来自Go数据的`HTML`页面，还能正确处理`escaping`转义字符的`HTML`输出。大多数情况下，都无需担心传入模板数据的escaping转义问题，Go将会帮你处理。
 
@@ -207,9 +207,7 @@ curl -i 127.0.0.1:3000/?secret_token=MySecretHTTP/1.1 200 OKDate: Mon, 01 Jun 
 > > If, for example, you have a blog featuring technical articles, you wouldn’t want a post that had the content </body> to create an end body tag. Instead, you’d want it to display as text, which means converting it to the HTML &lt;/body&gt;. If you had comments on your blog, you’d want to avoid users being able to create comments with <script> tags that run JavaScript on your users’ computers when they visit your page. This sort of security vulnerability is commonly referred to as cross-site scripting, or XSS. You can read much more on the topic at the Open Web Application Security Project (OWASP) website.3
 
 
-
-
-`html/template`包将分两步工作。首先需要需要将HTML字符模板解析成为`Template`类型。然后执行注入模板的数据结构来生成`HTML`字串。
+`html/template`包将分两步工作。首先需要需要将`HTML`字符模板**解析**成为`Template`类型。然后**执行**注入模板的数据结构来生成`HTML`字串。
 
 无论是从文件中载入还是直接在Go代码中定义，模板都是从纯文件字符串中创建。变量替换还是被称之为**action**控制结构，都是通过花括号`{{` 和 `}}`对包裹。任何它们之外的字符都不会被修改。
 
@@ -220,7 +218,7 @@ package mainimport (    "html/template""os" )func main() {    tmpl, err := 
 ```
 每一个模板都需要命名。原因稍后解释，目前都可以命名为“Foo”。
 
-如你所见，例子中的`{{.}}`称之为**点action**，它指的是传递到模板中的数据。因为我们只是传递一个字符串，所有我们需要做的是直接引用数据，但点可以赋值多次不同的数据; 例如，当循环数据时，`.`将分配当前迭代的值。我们将会看到在模板包中点将会被重复使用。
+如你所见，例子中的`{{.}}`称之为**点action**(译者：action可以理解为一种操作)，它指的是传递到模板中的数据。因为我们只是传递一个字符串，所有我们需要做的是直接引用数据，但`.`action可以赋值多次不同的数据; 例如，当循环数据时，`.`将分配当前迭代的值。我们将会看到在模板包中点将会被重复使用。
 
 ### 访问模板数据
 
@@ -248,7 +246,6 @@ type Article struct{    Name string    AuthorName string}func(a Article) Byl
 现在我们介绍了如何访问模板中不同类型数据结构，接下来看看是如何通过条件和循环结构控制模板中的执行流程。
 
 就像Go代码一样，模板通过`if`和`else`语句控制模板的条件流程。这没有什么难度，它将为模板提供大量的限制逻辑的部分。
-
 
 就像在Go代码中一样，我们可以通过使用If和Else语句来访问条件流。 这里没有太多的困难 - 它将弥补模板有限的逻辑的大部分。 因为我们不能使用括号来指定属于`if`语句的内容，所以我们使用`end`语句来表示结束边界。 如果文章尚未发布，此示例会将`"Draft"`一词附加到标题中：
 
@@ -286,9 +283,9 @@ func main(){    tmpl, err := template.New("Foo").Parse(`    {{range .}}      
 ### 管道过滤器（Piplines）
 ### 模板变量
 
-模板变量并不想之前介绍的概念那么重要，当然你应该知道你不必每次都访问传入到模板的数据值。你可以在模板中定义变量。之所以这样做的原因是当你想在模板多个地方以相同的方式格式化一个值的时候。它更容易和更快地把格式化的值赋给一个变量，并在多个地方输出。
+模板变量并不想之前介绍的概念那么重要，你应该知道你不必每次都访问传入到模板的数据值。你可以在模板中定义变量。之所以这样做的原因是当你想在模板多个地方以相同的方式格式化一个值的时候。它更容易和更快地把格式化的值赋给一个变量，并在多个地方输出。
 
-变量作为管道的结果，看起来与常规Go变量略有不同，因为它们必须以美元符号`$`开头。 我们可以用这种方式重写前面的示例的模板：
+变量作为管道的结果，看起来与常规`Go`变量略有不同，因为它们必须以美元符号`$`开头。 我们可以用这种方式重写前面的示例的模板：
 
 ```
 {{$total := multiply .Price .Quantity}}Price: ${{ printf "%.2f" $total}}
@@ -298,12 +295,63 @@ func main(){    tmpl, err := template.New("Foo").Parse(`    {{range .}}      
 > 
 > 变量的作用域只在其定义的代码块中。`if`或者`range`语句里定义的变量，在其外面的代码块将无效。
 
-
-
 ## 渲染 JSON
+
+`JSON`，全称`Javascript 对象标记`的缩写，是一种常见的数据格式。虽然`XML`以前是用于在`Web`系统之间通信的事实上的格式，但是过去五年来，JSON已经取代了它。 如果你现在将在互联网上传输数据，`JSON`是最好的数据格式。如果你不熟悉`JSON`，我重申一下应该看看`JSON`维基百科的[文章](https://en.wikipedia.org/wiki/JSON#Data_types.2C_syntax_and_example)。
+
+GO中`encoding/json`读（Unmarshaled）写（Marshaled）`JSON`对象。
+
 ### 序列化（Marshling）
+
+将数据类型转换成`JSON`的过程称之为`Marshaling`序列化。json包是用于转换Go数据类型为JSON对象而无需编程很多样本代码。当你序列化一个数据类型的时候，Go会推断出它最适合的JSON形式。
+
+> Marshling
+> 
+> **Marshling**指计算机中用于存储或者发送数据到另外一个系统的时候，表示一个对象转换格式化。当你指代JSON的时候也可以称之为`序列化`（serialising）。可是Go的作者命名还是选择了`marshaling`。它的反义词则为`unmarshaling`或者`反序列化`（serialising）
+
+`json.Marshal(interface{}) ([]byte, error)`的主要功能是序列化一个对象。方法的参数空接口适配所有数据类型，因此它可以接受任何类型的参数。它将返回一个byte类型的切片和错误标识。
+
+> Byte数组
+> 
+> 使用string函数可以轻松的将byte数组和切片转换成字串，因为字串本质上也是byte切片。这样说过于简单抽象，如果你想了解跟多关于GO中的字串的工作形式，请阅读Go的blog[文章](https://blog.golang.org/strings)。
+
+Go会尝试检查类型的值然后序列化值。字串会被序列化为JSON的字串，布尔值转换为JSON 布尔值，所有数字类型都编程为JSON的数字。对于复杂组合类型，Go能遍历该值的字段（对于结构体）或循环该值（例如使用地图或切片，尝试编组每个类型的每一项。
+
 ### 序列化结构体
+
+继续之前的Article例子：
+
+```
+package maintype Article struct {    Name string    AuthorName string    draft bool}func main(){    article := Article{        Name:       "JSON in Go",        AuthorName: "Mal Curtis",        draft:      true,    }    data, err := json.Marshal(article)    if err != nil {        fmt.Println("Couldn’t marshal article:", err)    }else{        fmt.Println(string(data))    }}
+
+```
+
+运行将会输出JSON字串：
+
+```
+ {"Name":"JSON in Go","AuthorName":"Mal Curtis"}
+```
+
+你肯定主要到了仅有`Name`和`AuthorName`两个字段，而`draft`字段却没有序列化。原因是Go只会转换结构体中的可导出字段。这很容易理解，非导出字段通常是私有信息，是否转换字段只与类型实现字段属性有关，而不是类型暴露的字段。
+
+你可能也看见上述格式化显示的结果有点粗爆。实际上可以使用`MarshalIndent`函数输出美观的`JSON`格式。使用`MarshalIndent`的时候可以提供前缀和缩进两个参数。通常前缀都不使用，但是缩进都会在每一行输出相应的缩进。普遍的做法是缩进两个空格，也可以缩进四个空格或者一个tab键，又或者是`emoji`表情例如一只喵，当然，其他语言未必就能正确读写emoji的缩进：
+
+```
+data, _ := json.MarshalIndent(article, "", "  ")fmt.Println(string(data))
+```
+
+输出：
+
+```
+{
+  "Name": "JSON in Go",
+  "AuthorName": "Mal Curtis"
+}
+```
+
 ### 自定义JSON字段名
+
+
 ### 内嵌类型
 ### 反序列化（Unmarshling）
 ### 未知的JSON结构处理
