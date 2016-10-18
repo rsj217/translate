@@ -297,7 +297,49 @@ func main(){    tmpl, err := template.New("Foo").Parse(`    {{define "ArticleR
 
 
 
+目前为止，我们已经见识了模板中简单的数据访问，但是在实际开发中，模板会收到一些并不合适展示的数据。例如，如果想要在页面输出价格，我们希望使用某种货币符号（例如`$`）格式化数据，又或者限制输出数据的为两位小数。此时管道应运而生。
 
+管道器是一种通过命令链方式计算数据。实际上我们已经见过管道器，我们已经使用过简单的命令，`.`是一个非常简单的管道器，它只有一个命令。管道器通常是一些用`|`分隔的一些命令。命令可以是一个值，例如`.`，也可以是一个函数/方法，它们的参数使用空格分隔，而不是使用圆括号和逗号，例如 `函数/方法 格式化字串 输入值`（`printf format_string input_value`）。
+每一个命令执行的结果都通过管道符以下一个函数的参数传入，使得许多命令会连在一起工作。最后一个命令的输出作为管道器的结果输出。每一个管道器都必须输出一个值，和另外一个可选的错误标识值。如果发生了错误，模板将会停止继续执行，并且会返回一个错误，作为执行函数`Execute`的返回值。`Go`内建了一些可以被管道器函数。你也可以自定义自己的管道器。内建的函数有比较（comparsion），转义（escaping），打印（printing）等帮助函数。目前我们只看其中一个，但是你可以访问[Go网站](https://golang.org/pkg/text%2Ftemplate/#hdr-Functions)查看完整的函数。想要格式化一个`float64`的值作为货币表示，可以将值传递给`printf`函数，它是`fmt.Sprintf`函数的别名。下面的例子，将值`12.3`格式化成一个带两个小数位数的浮点数，输出为：`Price: $12.30`：
+
+```
+func main(){    tmpl, _ := template.New("Foo").Parse(        "Price: ${{printf \"%.2f\" .}}\n”,    )    tmpl.Execute(os.Stdout, 12.3)}
+```
+
+也可以使用`.`命令用管道风格冲洗这个`printf`例子（记住，一个命令的结果值将作为下一个命令的参数）：
+
+```
+func main(){    tmpl, _ := template.New("Foo").Parse(        "Price: ${{. | printf \"%.2f\”}}\n”,    )    tmpl.Execute(os.Stdout, 12.3)}
+```
+
+如果我们扩展我们的例子将更有意义，使第一个值更复杂，比如，有一个价格（price）和数量（quantity）的产品。如果我们要显示产品的总价格，我们需要先将价格乘以数量。为此，我们需要一个创建一个新的格式化管道器函数。
+
+在模板中注册一个函数很容易。任何向模板传入函数的方式都能遵循我们之前学习的规则（注入数据）：返回一个值和一个可选的错误。写一个函数`Multiply`，它有两个浮点类型的参数，然后两个数的乘积：
+
+```
+// 把两个参数相乘并返回乘积func Multiply(a, b float64) float64 {	return a * b 
+}
+```
+
+定义好函数之后，将函数注册到模板中。使用`Funcs`方法，它有一个`FuncMap`类型的值。`FuncMap`是一个图，模板中的函数名作为图的key，用来执行的函数作为图的值：
+
+```
+map := template.FuncMap{    "multiply": Multiply,}
+```
+创建模板的时候需要分几步。首先创建一个空模板，实例化`FuncMap`然后调用`Funcs`注入过滤器函数。接下来解析模板。在注入新函数之前解析模板将会抛出一个错误，因为此时`go不`知道`multiply`函数。下面的例子，我们看到模板中的`multiply`函数执行结果传入到`printf`方法并输出：`"Price: $24.60"`：
+
+```
+type Product struct {        Price    float64        Quantity float64}func main() {    tmpl := template.New("Foo")    tmpl.Funcs(template.FuncMap{ "multiply": Multiply })    tmpl, err := tmpl.Parse(        "Price: ${{ multiply .Price .Quantity | printf \"%.2f\”}}\n”, 
+    )    if err != nil { panic(err)  }    err = tmpl.Execute(os.Stdout, Product{        Price:    12.3,
+        Quantity: 2,    })    if err != nil { panic(err)  }}
+```
+
+上面就是我们添加了自定义的过滤函数并在模板中运行。通过定义命令链，我们可以轻松在模板中操作数据以正确的格式显示。下面是上述例子的合起来的完整代码：
+
+```
+package mainimport ( "os"    "text/template")type Product struct {        Price    float64        Quantity float64}func Multiply(a, b float64) float64 {    return a * b}func main() {    tmpl := template.New("Foo")    tmpl.Funcs(template.FuncMap{ "multiply": Multiply })    tmpl, err := tmpl.Parse(        "Price: ${{ multiply .Price .Quantity | printf \"%.2f\”}}➥\n”, )    if err != nil { panic(err)  }    err = tmpl.Execute(os.Stdout, Product{        Price:    12.3,		   Quantity: 2,
+	  })    if err != nil { panic(err)  }}
+```
 
 ### 模板变量
 
