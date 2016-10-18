@@ -203,8 +203,9 @@ curl -i 127.0.0.1:3000/?secret_token=MySecretHTTP/1.1 200 OKDate: Mon, 01 Jun 
 
 > Escaping转义
 > 
-> Escaping input on an HTML page is extremely important for both layout and se- curity reasons. Escaping is the process of turning characters that have special meaning in HTML into HTML entities. For example, an ampersand is used to start an HTML entity, so if you wanted to display an ampersand correctly, you would have to write the HTML entity for one instead: &amp;. If you don’t escape any data you try to display in your templates, then at best you might allow people to accidentally break your page layout, and at worst you open up your pages to ma- licious attackers.
-> > If, for example, you have a blog featuring technical articles, you wouldn’t want a post that had the content </body> to create an end body tag. Instead, you’d want it to display as text, which means converting it to the HTML &lt;/body&gt;. If you had comments on your blog, you’d want to avoid users being able to create comments with <script> tags that run JavaScript on your users’ computers when they visit your page. This sort of security vulnerability is commonly referred to as cross-site scripting, or XSS. You can read much more on the topic at the Open Web Application Security Project (OWASP) website.3
+> 在HTML页面上escaping转义输入对于布局和安全原因都非常重要。 转义是将在HTML中具有特殊含义的字符转换为`HTML`实体的过程。 例如，一个`＆`符号用于表示一个`HTML`实体，因此，如果你想正确显示一个`＆`符号，你必须写一个`HTML`实体代替：`＆amp`; 如果你不关心试图显示在模板中的任何数据，那么最好的情况下默许了用户意外地破坏页面布局，最坏的情况下被打开的页面遭到恶意攻击。
+> 
+> 例如，如果您有一篇包含技术文章的博客，您不会希望有一个内容`</body>`的帖子来创建实际 `body`内容结束标记。相反，您希望将其显示为文本，这意味着将其转换为`HTML``＆lt;/ body＆gt;`。 如果您在自己的博客上发表了评论，希望避免用户使用`<script>`标记创建评论，因为这些标记会在用户访问您的网页时，在用户的计算机上运行JavaScript。 这种安全漏洞通常被称为**跨站点脚本**或**XSS**。 您可以在开放Web应用程序安全项目（OWASP）网站上阅读有关该[主题](https://www.owasp.org/index.php/Cross-site_Scripting_(XSS))的更多内容
 
 
 `html/template`包将分两步工作。首先需要需要将`HTML`字符模板**解析**成为`Template`类型。然后**执行**注入模板的数据结构来生成`HTML`字串。
@@ -274,13 +275,30 @@ func main(){    tmpl, err := template.New("Foo").Parse(`    {{range .}}      
 
 当解析模板的时候，实际上可以同时定义多个模板。这样就在运行代码的时候，也可以选择使用哪一个模板，或者在一个模板中调用另外一个模板。这给模板提供了强大的功能，鼓励模板代码的重用---普遍的做法是创建多个模板块。
 
+在模板中使用`{{ define "FOO" }}`action定义命名模板，这些定义是顶级的action，换言之，没有其他的action。
+
 > 添加模板
 > 
 > 你不必在一次`Parse`调用的时候添加多个模板，而是可以多次调用`Parse`，或者使用`ParseFile`和`ParseGlob`方面从文件中载入模板。后续的章节将会介绍`Glob`模块。
 
+执行模板注入的时候，可以调用`ExecuteTemplate(wr io.Writer, name string, data interface{})`方法取代我们目前所用的`Execute`方法，当上下文不是`.`或者当前上下文的其他值的时候，也可以使用action `{{template "FOO" context}}`调用。模板action了可以被另外一个模板所调用，这样就能通过key实现模板的重用。
 
+例如，在我们前面的`article`循环中，随着每篇article的模板开始增长将会变得更难理解。你失去了很容易找出模板流的能力，因为它不是立即显而易见的。我们可以从循环它的模板中分离文章模板：
+
+```
+func main(){    tmpl, err := template.New("Foo").Parse(`    {{define "ArticleResource"}}        <p>{{.Name}} by {{.AuthorName}}</p>    {{end}}
+        {{define "ArticleLoop"}}        {{range .}}            {{template "ArticleResource" .}}        {{else}}            <p>No published articles yet</p>        {{end}}{{end}}    {{template "ArticleLoop" .}}    `)    if err != nil { panic(err) }    err = tmpl.Execute(os.Stdout, []Article{})    if err != nil { panic(err) }}
+
+```
+
+现在我们可以增加`ArticleResource`模板的大小，而不必担心`ArticleLoop`模板的可读性。 我们还可以使用来自另一个完全独立的模板的`ArticleResource`模板。
 
 ### 管道过滤器（Piplines）
+
+
+
+
+
 ### 模板变量
 
 模板变量并不想之前介绍的概念那么重要，你应该知道你不必每次都访问传入到模板的数据值。你可以在模板中定义变量。之所以这样做的原因是当你想在模板多个地方以相同的方式格式化一个值的时候。它更容易和更快地把格式化的值赋给一个变量，并在多个地方输出。
